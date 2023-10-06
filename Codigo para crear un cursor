@@ -1,0 +1,73 @@
+CREATE DATABASE Ventas;
+USE Ventas;
+
+
+CREATE TABLE Productos1 (
+    ProductoID INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(255) NOT NULL,
+    Precio DECIMAL(10, 2) NOT NULL,
+    productos INT NOT NULL
+);
+
+
+INSERT INTO Productos1 (Nombre, Precio, productos)
+VALUES
+    ('MAni', 3454, 100),
+    ('Gomitas', 45345, 50),
+    ('Helado', 564556, 200);
+
+
+CREATE TABLE Ventas (
+    VentaID INT AUTO_INCREMENT PRIMARY KEY,
+    FechaVenta DATE NOT NULL,
+    Total DECIMAL(14, 4) NOT NULL
+);
+
+
+CREATE TABLE DescripciondeVenta (
+    DetalleID INT AUTO_INCREMENT PRIMARY KEY,
+    VentaID INT,
+    ProductoID INT,
+    Cantidad INT NOT NULL,
+    PrecioUnitario DECIMAL(14, 4) NOT NULL,
+    Subtotal DECIMAL(14, 4) NOT NULL
+);
+
+
+DELIMITER //
+
+CREATE PROCEDURE CalcularproductosPorDia()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE fecha DATE;
+    DECLARE totaldeproductos DECIMAL(10, 2);
+    DECLARE productos_cur CURSOR FOR SELECT productofinal, SUM(Total) FROM Ventas GROUP BY productofinal;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+    
+    OPEN productos_cur;
+    
+    CREATE TABLE IF NOT EXISTS CalcularproductosPorDia (
+    productofinal DATE PRIMARY KEY,
+        Totalproductos DECIMAL(10, 2)
+    );
+    
+    read_loop: LOOP
+        FETCH productos_cur INTO fecha, totaldeproductos;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        
+        INSERT INTO productosdia (productosdia, Totalproductos) VALUES (fecha, totaldeproductos);
+    END LOOP;
+    
+    CLOSE productos_cur;
+    
+    SELECT * FROM CalcularproductosPorDia;
+    
+END;
+//
+
+DELIMITER ;
+
+
+CALL CalcularproductosPorDia();
